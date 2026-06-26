@@ -1,66 +1,75 @@
 # 🔥 Tokenferno
 
-**Your context window, all ablaze.**
+![tokenferno](https://github.com/user-attachments/assets/e28d3388-7181-47b8-9831-0558266b0646)
 
-<img width="1672" height="941" alt="E6E50818-1946-444F-932F-98590147C5F6" src="https://github.com/user-attachments/assets/e28d3388-7181-47b8-9831-0558266b0646" />
+Renders Claude Code and Copilot CLI token burn as an actual fire. The harder your agents work, the higher the flames.
 
-Watch your AI coding agents incinerate tokens in real time -- rendered as an actual fire.
+Single binary, zero network calls. Built with Rust + ratatui. It reads the logs your agents already write, and sets them alight.
 
-tokenferno is a single-binary terminal app that turns token burn from Claude Code and GitHub Copilot CLI into a live, full-screen inferno. Every prompt is fuel: the harder your agents work, the higher the flames climb. Go idle and it dies to a flickering pilot light. Push it hard and it's a white-hot blaze -- with a live Claude-vs-Copilot scoreboard, a tok/s tachometer, and a running odometer of everything you've torched today.
-
-Two modes, one keystroke apart: **INFERNO** (the screen is on fire, your tokens are the fuel) and **DASHBOARD** (the same data as cold, honest tables). It also surfaces the uncomfortable truth: an `▲ generated / ▼ context` split that shows exactly how much of the blaze is just prompt context you re-send every single turn.
-
-Under the hood: Rust + ratatui. Sub-second latency, zero network calls, no credentials, nothing leaves your machine.
-
-No quota gauges. No brakes. Just watch it burn.
+*Your context window, all ablaze.*
 
 ---
 
-## Install
+## Getting started
 
-Requires [Rust](https://rustup.rs/) 1.75+.
+### Requirements
+
+- A true-color terminal (macOS or Linux)
+- Rust stable only if building from source -- https://rustup.rs
+
+### Install
+
+**Homebrew** (macOS, easiest)
 
 ```bash
-git clone https://github.com/Just-Jan/tokenferno
+brew install Just-Jan/tap/tokenferno
+```
+
+First time? Homebrew 6+ asks you to approve the tap once with `brew trust Just-Jan/tap`, then re-run. Updates later: `brew upgrade tokenferno`.
+
+**Build from source**
+
+```bash
+git clone https://github.com/Just-Jan/tokenferno.git
 cd tokenferno
-cargo install --path . --bin tokenferno
+
+cargo build --release
+./target/release/tokenferno
 ```
 
-That puts `tokenferno` on your `PATH` (in `~/.cargo/bin`), so you can run it from
-anywhere. Prefer not to install? Build and run in place with
-`cargo build --release && ./target/release/tokenferno`.
-
-**Homebrew:**
+**Or install to your PATH**
 
 ```bash
-brew tap just-jan/tap
-brew trust just-jan/tap   # Homebrew 6+: approve the third-party tap (one-time)
-brew install tokenferno
-```
-
-Upgrade later with `brew update && brew upgrade tokenferno`.
-
-> Prebuilt binaries are also attached to each [release](https://github.com/Just-Jan/tokenferno/releases).
-
----
-
-## Usage
-
-```bash
+cargo install --path .
 tokenferno
 ```
 
-Auto-discovers Claude Code and Copilot CLI log files and starts monitoring immediately. No config, no credentials, no setup.
+### Keys
+
+```
+ 1  INFERNO  ·  2  DASHBOARD  ·  Tab  toggle  ·  c  Claude only  ·  p  Copilot only  ·
+ a  all  ·  r  reset counters  ·  d  detection HUD  ·  q  quit
+```
+
+> Reads `~/.claude/projects/**` and `~/.copilot/logs/**` -- nothing else. Zero network, no credentials, nothing leaves your machine.
 
 ---
 
-## Two modes
+## Two modes, one keystroke apart
 
-Switch anytime with `1` / `2` or `Tab`.
+Switch with `1` / `2` or `Tab`. INFERNO is the default.
 
-### Mode 1 -- INFERNO (default)
+### INFERNO
 
-The showpiece. No tables -- **the screen is on fire, and your tokens are the fuel.** A full-screen real-time [DOOM fire](https://fabiensanglard.net/doom_fire_psx/index.html) whose height and intensity are driven directly by how fast your agents are burning tokens right now. Idle? It dies to a flickering pilot light. Working hard? A towering, white-hot inferno.
+The showpiece. No tables -- **the screen is on fire, and your tokens are the fuel.** Full-screen [DOOM fire](https://fabiensanglard.net/doom_fire_psx/index.html) driven by live tok/s. Every prompt is a flare you can watch land. Good for a side monitor, or for showing a colleague who asks "wait, what's that?"
+
+What's on screen:
+
+- **Live DOOM fire** -- a heat grid propagated every frame (random-cooldown + lateral-shift), mapped to a true-color gradient (black → red → orange → yellow → white) and an ASCII glyph ramp (` .:*o▒▓█`). Fuel set from smoothed tok/s, log-scaled.
+- **Token-burst flares** -- every assistant turn injects a hot flare that whooshes up the flames.
+- **Claude vs Copilot scoreboard** -- per-provider totals, live sparklines, tok/s. Claude in ember-orange, Copilot in cyan.
+- **Hero odometer** -- tokens burned today in big block digits, with an honest `▲ generated / ▼ context` breakdown. Almost all of that number is prompt context you re-send every turn, not new output. Now you know.
+- **`● BURNING` / `○ idle` badge** and a `🔄 N in-flight` indicator.
 
 ```
 ┌ ● Tokenferno  INFERNO  DASHBOARD  ‹1·2 or Tab to switch · q quit›  ● BURNING ─┐
@@ -75,17 +84,9 @@ The showpiece. No tables -- **the screen is on fire, and your tokens are the fue
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-What's on screen:
+### DASHBOARD
 
-- **Live DOOM fire** -- a heat grid propagated every frame, mapped to a true-color gradient (black > red > orange > yellow > white) and an ASCII glyph ramp. The bottom fuel row is set from the smoothed tok/s rate.
-- **Token-burst flares** -- every assistant turn injects a hot flare you can see land.
-- **Claude vs Copilot scoreboard** -- per-provider totals, live sparklines, and tok/s. Claude in ember-orange, Copilot in cyan.
-- **Hero odometer** -- tokens burned today in big block digits, with an honest `▲ generated / ▼ context` breakdown.
-- **`● BURNING` / `○ idle` badge** and a `🔄 N in-flight` indicator.
-
-### Mode 2 -- DASHBOARD
-
-One live ops dashboard that merges the live tile readings with detailed per-session and recent-event tables. Every live number is driven by the same detection engine that fuels the fire, so the two modes never disagree about what's burning.
+The same data, cold and honest. Per-session tables, a tachometer, a recent-events feed -- every live number driven by the same detection engine as the fire, so the two modes never disagree about what's burning.
 
 ```
 ┌ ● Tokenferno  INFERNO  DASHBOARD  ‹1·2 or Tab to switch · q quit›  ● BURNING ─┐
@@ -95,6 +96,8 @@ One live ops dashboard that merges the live tile readings with detailed per-sess
 ├───────────────────────────────────────────────────────────────────────────────┤
 │ [████████████████████████████████████████████████████████████]  8.0k tok/s   │
 │ ▁▃▅▆█▆▅▃▁······▁▃▅▆█  (100 ms heartbeat strip)                               │
+├─ tokens/sec · last 60 s    ·    AVG 480/min · PEAK 41.0k/min @ 13:37 ─────────┤
+│      ▁▂▅▇█▇▅▃          ▁▂▄▆█▇▅▃▂          ▁▃▅▇█▇▆▄▂                           │
 ├─ CLAUDE ● 5.3k/s · in 900k · out 50k · cache-r 300k ─┬─ recent events ────────┤
 │ session  model       in      out    cache-r   age     │ 13:37 C sonnet out 18 │
 │ 3c1149   sonnet-4-6  12 312  1 102  88 003    0s      │ 13:37 P opus   out 90 │
@@ -106,68 +109,28 @@ One live ops dashboard that merges the live tile readings with detailed per-sess
 
 ---
 
-## Keyboard shortcuts
-
-| Key | Action |
-|-----|--------|
-| `1` | INFERNO mode |
-| `2` | DASHBOARD mode |
-| `Tab` | Toggle modes |
-| `c` | Claude only |
-| `p` | Copilot only |
-| `a` | All providers |
-| `r` | Reset session counters |
-| `d` | Toggle detection HUD |
-| `q` | Quit |
-
----
-
 ## Data sources
 
-No network calls, no credentials. tokenferno reads only the log files your agents already write.
+tokenferno reads only the log files your agents already write.
 
-| Provider | Source | Real-time? |
-|----------|--------|------------|
-| Claude Code | `~/.claude/projects/**/*.jsonl` | ✅ append |
-| GitHub Copilot CLI | `~/.copilot/logs/process-*.log` | ✅ append |
-| GitHub Copilot CLI | `~/.copilot/session-store.db` (context) | ✅ SQLite |
+| Provider           | Source                                  | Real-time? |
+| ------------------ | --------------------------------------- | ---------- |
+| Claude Code        | `~/.claude/projects/**/*.jsonl`         | ✅ tail     |
+| GitHub Copilot CLI | `~/.copilot/logs/process-*.log`         | ✅ tail     |
+| GitHub Copilot CLI | `~/.copilot/session-store.db` (context) | ✅ SQLite   |
 
----
-
-## Roadmap
-
-### v1 -- current
-- [x] Real-time token burn for Claude Code + Copilot CLI
-- [x] INFERNO mode (DOOM fire)
-- [x] DASHBOARD mode
-- [x] Claude-vs-Copilot scoreboard with live sparklines
-- [x] `▲ generated / ▼ context` split
-
-### v2+
-- [ ] "Tokens left" gauges (Claude rolling 5h window; Copilot monthly quota estimate)
-- [ ] $ cost estimate for Claude (model + cache-tier aware)
-- [ ] Per-repo / per-branch breakdown
-- [ ] Model-mix breakdown
-- [ ] 80%-of-window desktop notification
-- [ ] Prometheus exporter (`--serve :9876`)
-- [ ] Replay mode (scrub historical usage)
-- [ ] CSV / JSON export
+Non-CLI clients (claude.ai, Copilot-in-IDE, mobile) don't write local logs -- out of scope for any version.
 
 ---
 
-## Goals
+## What's next
 
-- Single binary, zero network calls, no credentials required
-- Sub-second latency from "agent emits usage" to "TUI updates"
-- Works while multiple Claude / Copilot processes run concurrently
-- Cross-platform: macOS first, Linux next, Windows best-effort
-
-## Non-goals
-
-- Replacing official billing dashboards
-- Persisting historical data beyond what providers already write to disk
-- Sending any session content off the machine
-- Authoritative "remaining quota" (providers don't expose this locally; any v2 gauge is a lower-bound estimate)
+- [ ] **Quota gauges** -- tokens left this hour / day / month for Claude + Copilot
+- [ ] **$ cost column** -- per-model, cache-tier aware. For when someone asks.
+- [ ] **Cursor + Aider support** -- same fire, more agents
+- [ ] **80%-of-window alert** -- desktop notification before your context blows up
+- [ ] **Replay mode** -- scrub back through today's burn like a post-mortem
+- [ ] **Global leaderboard (opt-in)** -- submit your stats, get your archetype (*The Firestarter*, *The Context Hoarder*...), see collective burn milestones. Off by default. Nothing leaves your machine until you say so.
 
 ---
 

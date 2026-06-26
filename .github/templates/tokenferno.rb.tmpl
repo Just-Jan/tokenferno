@@ -1,0 +1,42 @@
+class Tokenferno < Formula
+  desc "Real-time TUI showing token burn for Claude Code and Copilot CLI"
+  homepage "https://github.com/Just-Jan/tokenferno"
+  version "@VERSION@"
+  license "MIT"
+
+  on_macos do
+    on_arm do
+      url "https://github.com/Just-Jan/tokenferno/releases/download/v@VERSION@/tokenferno-aarch64-apple-darwin.tar.gz"
+      sha256 "@SHA_ARM_MAC@"
+    end
+    on_intel do
+      url "https://github.com/Just-Jan/tokenferno/releases/download/v@VERSION@/tokenferno-x86_64-apple-darwin.tar.gz"
+      sha256 "@SHA_X64_MAC@"
+    end
+  end
+
+  on_linux do
+    on_intel do
+      url "https://github.com/Just-Jan/tokenferno/releases/download/v@VERSION@/tokenferno-x86_64-unknown-linux-gnu.tar.gz"
+      sha256 "@SHA_X64_LINUX@"
+    end
+    on_arm do
+      # No prebuilt arm64 Linux binary; build from source.
+      url "https://github.com/Just-Jan/tokenferno/archive/refs/tags/v@VERSION@.tar.gz"
+      sha256 "@SHA_SRC@"
+      depends_on "rust" => :build
+    end
+  end
+
+  def install
+    if File.exist?("Cargo.toml")
+      system "cargo", "install", "--bin", "tokenferno", *std_cargo_args
+    else
+      bin.install "tokenferno"
+    end
+  end
+
+  test do
+    assert_match "tokenferno #{version}", shell_output("#{bin}/tokenferno --version")
+  end
+end

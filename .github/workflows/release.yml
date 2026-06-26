@@ -1,9 +1,20 @@
 name: release
 
-# Cut a release by pushing a tag, e.g.:  git tag v0.1.0 && git push origin v0.1.0
-# Builds the binary for macOS (arm64 + x64) and Linux (x64) and attaches the
-# tarballs to the GitHub Release for that tag. Uses the built-in GITHUB_TOKEN —
-# no secrets to configure.
+# How releasing works (after the one-time setup below):
+#
+#   1. bump `version` in Cargo.toml
+#   2. git tag v0.2.0 && git push origin v0.2.0
+#
+# That's it. This workflow then:
+#   - builds the `tokenferno` binary for macOS (arm64 + x64) and Linux (x64),
+#   - attaches the tarballs to the GitHub Release for the tag,
+#   - regenerates the Homebrew formula (version + per-platform sha256) from
+#     .github/templates/tokenferno.rb.tmpl and pushes it to Just-Jan/homebrew-tap.
+#
+# One-time setup: add a repo secret HOMEBREW_TAP_TOKEN — a Personal Access Token
+# with write (contents) access to the Just-Jan/homebrew-tap repo. Without it, the
+# tap-update job logs a notice and skips (the binaries are still published).
+
 on:
   push:
     tags: ["v*"]
@@ -22,7 +33,7 @@ jobs:
         include:
           - os: macos-latest
             target: aarch64-apple-darwin
-          - os: macos-13
+          - os: macos-latest
             target: x86_64-apple-darwin
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
@@ -41,6 +52,49 @@ jobs:
         run: tar -C "target/${{ matrix.target }}/release" -czf "tokenferno-${{ matrix.target }}.tar.gz" tokenferno
 
       - name: Attach to release
+        if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
           files: tokenferno-${{ matrix.target }}.tar.gz
+
+  publish-formula:
+    name: update homebrew tap
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Regenerate formula and push to tap
+        env:
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TAP_TOKEN:-}" ]; then
+            echo "::notice::HOMEBREW_TAP_TOKEN not set — skipping tap update. Add the secret to enable auto-publish."
+            exit 0
+          fi
+          V="${GITHUB_REF_NAME#v}"
+          base="https://github.com/Just-Jan/tokenferno/releases/download/v${V}"
+          sha() { curl -fsSL "$1" | sha256sum | awk '{print $1}'; }
+          SHA_ARM_MAC="$(sha "${base}/tokenferno-aarch64-apple-darwin.tar.gz")"
+          SHA_X64_MAC="$(sha "${base}/tokenferno-x86_64-apple-darwin.tar.gz")"
+          SHA_X64_LINUX="$(sha "${base}/tokenferno-x86_64-unknown-linux-gnu.tar.gz")"
+          SHA_SRC="$(sha "https://github.com/Just-Jan/tokenferno/archive/refs/tags/v${V}.tar.gz")"
+          git clone --depth 1 "https://x-access-token:${TAP_TOKEN}@github.com/Just-Jan/homebrew-tap.git" tap
+          sed -e "s/@VERSION@/${V}/g" \
+              -e "s/@SHA_ARM_MAC@/${SHA_ARM_MAC}/g" \
+              -e "s/@SHA_X64_MAC@/${SHA_X64_MAC}/g" \
+              -e "s/@SHA_X64_LINUX@/${SHA_X64_LINUX}/g" \
+              -e "s/@SHA_SRC@/${SHA_SRC}/g" \
+              .github/templates/tokenferno.rb.tmpl > tap/Formula/tokenferno.rb
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/tokenferno.rb
+          if git diff --cached --quiet; then
+            echo "formula already up to date"
+          else
+            git commit -m "tokenferno ${V}"
+            git push
+          fi
