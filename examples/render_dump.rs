@@ -158,7 +158,9 @@ fn main() {
     let debug = args.get(4).map(|s| s == "debug").unwrap_or(false);
 
     let snap = synthetic(rate);
-    let backend = TestBackend::new(100, 34);
+    let w: u16 = std::env::var("TF_DUMP_W").ok().and_then(|s| s.parse().ok()).unwrap_or(100);
+    let h: u16 = std::env::var("TF_DUMP_H").ok().and_then(|s| s.parse().ok()).unwrap_or(34);
+    let backend = TestBackend::new(w, h);
     let mut terminal = Terminal::new(backend).unwrap();
     let mut fun_state = ui::fun::FunState::new();
 
