@@ -1,0 +1,41 @@
+[package]
+name = "tokenferno"
+version = "0.1.0"
+edition = "2021"
+description = "Real-time TUI showing token burn for Claude Code and Copilot CLI."
+license = "MIT"
+
+[lib]
+name = "tokenferno"
+path = "src/lib.rs"
+
+[[bin]]
+name = "tokenferno"
+path = "src/main.rs"
+
+[[bin]]
+name = "latency-probe"
+path = "src/bin/latency_probe.rs"
+
+[dependencies]
+tokio       = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "fs", "io-util", "signal", "net"] }
+ratatui     = "0.29"
+crossterm   = { version = "0.28", features = ["event-stream"] }
+notify      = "7"
+serde       = { version = "1", features = ["derive"] }
+serde_json  = "1"
+clap        = { version = "4", features = ["derive"] }
+chrono      = { version = "0.4", features = ["serde"] }
+directories = "5"
+glob        = "0.3"
+tracing     = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow      = "1"
+futures     = "0.3"
+portable-pty = "0.8"
+sysinfo     = { version = "0.32", default-features = false, features = ["system"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
