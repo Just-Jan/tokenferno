@@ -1,5 +1,7 @@
 # 🔥 Tokenferno
 
+[![CI](https://github.com/Just-Jan/tokenferno/actions/workflows/ci.yml/badge.svg)](https://github.com/Just-Jan/tokenferno/actions/workflows/ci.yml) [![security audit](https://github.com/Just-Jan/tokenferno/actions/workflows/audit.yml/badge.svg)](https://github.com/Just-Jan/tokenferno/actions/workflows/audit.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 ![tokenferno](https://github.com/user-attachments/assets/e28d3388-7181-47b8-9831-0558266b0646)
 
 Renders Claude Code and Copilot CLI token burn as an actual fire. The harder your agents work, the higher the flames.
@@ -52,6 +54,19 @@ tokenferno
 ```
 
 > Reads `~/.claude/projects/**` and `~/.copilot/logs/**` -- nothing else. Zero network, no credentials, nothing leaves your machine.
+
+### Lower-latency mode (optional)
+
+By default tokenferno tails the log files on disk. To skip the disk round-trip,
+run your agent under its PTY wrapper -- it streams usage to a running TUI over a
+local Unix socket as bytes arrive:
+
+```bash
+tokenferno              # start the dashboard in one terminal
+tokenferno exec -- claude     # in another: run your agent wrapped
+```
+
+If no TUI is running, `exec` just prints a short usage summary to stderr instead.
 
 ---
 
