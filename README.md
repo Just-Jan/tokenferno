@@ -69,7 +69,7 @@ What's on screen:
 - **Token-burst flares** -- every assistant turn injects a hot flare that whooshes up the flames.
 - **Claude vs Copilot scoreboard** -- per-provider totals, live sparklines, tok/s. Claude in ember-orange, Copilot in cyan.
 - **Hero odometer** -- tokens burned today in big block digits, with an honest `▲ generated / ▼ context` breakdown. Almost all of that number is prompt context you re-send every turn, not new output. Now you know.
-- **`● BURNING` / `○ idle` badge** and a `🔄 N in-flight` indicator.
+- **`● BURNING` / `○ idle` badge** and a `↻ N in-flight` indicator.
 
 ```
 ┌ ∙ Tokenferno   INFERNO   DASHBOARD   ‹1·2 or Tab to switch · q quit›  ● BURNING ───────┐
