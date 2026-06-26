@@ -94,10 +94,10 @@ fn filtered_today(snap: &Snapshot, filter: Filter) -> Totals {
 
 fn drip_badge(drip_per_min: f64) -> Span<'static> {
     if drip_per_min < 0.1 {
-        Span::styled(" 💧 — ", Style::default().fg(Color::DarkGray))
+        Span::styled(" — ", Style::default().fg(Color::DarkGray))
     } else {
         Span::styled(
-            format!(" 💧 {drip_per_min:.1}/min "),
+            format!(" {drip_per_min:.1}/min "),
             Style::default()
                 .fg(Color::Black)
                 .bg(Color::LightCyan)
@@ -253,7 +253,7 @@ fn render_kpis(f: &mut Frame, area: Rect, snap: &Snapshot, filter: Filter) {
 
 fn render_in_flight(f: &mut Frame, area: Rect, snap: &Snapshot, filter: Filter) {
     let now = Utc::now();
-    let mut spans: Vec<Span> = vec![Span::raw(" 🔄 ")];
+    let mut spans: Vec<Span> = vec![Span::raw(" ↻ ")];
     let iter: Vec<_> = snap
         .in_flight_by_provider
         .iter()

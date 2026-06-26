@@ -292,7 +292,7 @@ fn render_hero(
 
         // Live rate readout, one line below.
         let flame = if burning {
-            ["🔥", "🔥", "🔥"][(tick / 3 % 3) as usize]
+            ["▴", "▲", "▴"][(tick / 3 % 3) as usize]
         } else {
             "·"
         };
