@@ -339,7 +339,7 @@ where
 mod tests {
     use super::*;
 
-    const FIXTURE: &str = r#"{"parentUuid":"x","isSidechain":false,"type":"assistant","timestamp":"2026-04-10T08:23:12.441Z","sessionId":"00623301-5b4b-41ed-bd4f-111037102780","cwd":"/Users/jan/Work/Claude","version":"2.1.90","gitBranch":"main","message":{"model":"claude-sonnet-4-6","id":"msg_01","role":"assistant","usage":{"input_tokens":3,"cache_creation_input_tokens":4950,"cache_read_input_tokens":11225,"output_tokens":6,"service_tier":"standard"}}}"#;
+    const FIXTURE: &str = r#"{"parentUuid":"x","isSidechain":false,"type":"assistant","timestamp":"2026-04-10T08:23:12.441Z","sessionId":"00623301-5b4b-41ed-bd4f-111037102780","cwd":"/home/user/project","version":"2.1.90","gitBranch":"main","message":{"model":"claude-sonnet-4-6","id":"msg_01","role":"assistant","usage":{"input_tokens":3,"cache_creation_input_tokens":4950,"cache_read_input_tokens":11225,"output_tokens":6,"service_tier":"standard"}}}"#;
 
     #[test]
     fn parses_assistant_line() {

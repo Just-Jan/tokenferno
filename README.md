@@ -149,6 +149,19 @@ Non-CLI clients (claude.ai, Copilot-in-IDE, mobile) don't write local logs -- ou
 
 ---
 
+## Security & privacy
+
+tokenferno reads logs that contain your prompts and code, so "does it phone home?" is a fair question. It doesn't -- and you can confirm it.
+
+- **It has no way to make network calls.** There is no HTTP/network-client crate anywhere in the dependency tree (no `reqwest`, `hyper`, `curl`, ...). The only socket it opens is a **local Unix socket** (`~/.tokenferno/sock`) for IPC between the `exec` wrapper and the TUI.
+- **Counts, not content.** It parses your logs to *count* tokens, but only ever stores or shows aggregate numbers, model names, and session ids -- **never your prompts, responses, or code**.
+- **Writes nothing outside its own folder.** The only files it creates live under `~/.tokenferno/` (the socket + daily token-count logs for the live view). No telemetry, no credentials.
+- **Verify it yourself.** It's MIT-licensed and open -- read the code. Or watch it at runtime: `lsof -p "$(pgrep -x tokenferno)"` (or Little Snitch / `tcpdump`) shows zero outbound connections.
+
+[![security audit](https://github.com/Just-Jan/tokenferno/actions/workflows/audit.yml/badge.svg)](https://github.com/Just-Jan/tokenferno/actions/workflows/audit.yml) Dependencies are checked against the [RustSec advisory database](https://rustsec.org/) on every change. Found an issue? See [SECURITY.md](SECURITY.md).
+
+---
+
 ## What's next
 
 - [ ] **Quota gauges** -- tokens left this hour / day / month for Claude + Copilot
