@@ -1,187 +1,167 @@
 # 🔥 Tokenferno
 
-<img width="1672" height="941" alt="E6E50818-1946-444F-932F-98590147C5F6" src="https://github.com/user-attachments/assets/03eab1f7-dc2e-4906-9500-3b181c0035c6" />
+**Your context window, all ablaze.**
 
+<img width="1672" height="941" alt="E6E50818-1946-444F-932F-98590147C5F6" src="https://github.com/user-attachments/assets/e28d3388-7181-47b8-9831-0558266b0646" />
 
-> Real-time TUI that shows how many tokens your AI coding agents are
-> incinerating right now — and how much runway you have left this
-> hour / day / month.
+Watch your AI coding agents incinerate tokens in real time -- rendered as an actual fire.
 
-**Status:** research notes only. No code yet. Target stack:
-**Rust + [ratatui]**.
+tokenferno is a single-binary terminal app that turns token burn from Claude Code and GitHub Copilot CLI into a live, full-screen inferno. Every prompt is fuel: the harder your agents work, the higher the flames climb. Go idle and it dies to a flickering pilot light. Push it hard and it's a white-hot blaze -- with a live Claude-vs-Copilot scoreboard, a tok/s tachometer, and a running odometer of everything you've torched today.
 
-## v1 scope
+Two modes, one keystroke apart: **INFERNO** (the screen is on fire, your tokens are the fuel) and **DASHBOARD** (the same data as cold, honest tables). It also surfaces the uncomfortable truth: an `▲ generated / ▼ context` split that shows exactly how much of the blaze is just prompt context you re-send every single turn.
 
-Real-time **token burn only** for both Claude Code and Copilot CLI.
-No quota / "tokens left" gauges, no $ cost column. Those are v2+.
+Under the hood: Rust + ratatui. Sub-second latency, zero network calls, no credentials, nothing leaves your machine.
 
-Supported (planned) data sources:
+No quota gauges. No brakes. Just watch it burn.
 
-| Provider           | Source                                     | Real-time? |
-| ------------------ | ------------------------------------------ | ---------- |
-| Claude Code        | `~/.claude/projects/**/*.jsonl`            | ✅ append  |
-| GitHub Copilot CLI | `~/.copilot/logs/process-*.log`            | ✅ append  |
-| GitHub Copilot CLI | `~/.copilot/session-store.db` (context)    | ✅ SQLite  |
+---
 
-## ASCII mock (v1)
+## Install
 
-```
-┌─ Tokenferno ───────────────────────────────────  q quit  r reset  c/p filter ─┐
-│ TOTAL TODAY   in 1 432 105   out 87 412   cache-r 412 880                     │
-│ NOW           ▁▂▅▇█▇▅▃▂▁▁▂▄▆█  18.2k tok/min                                  │
-├─ Claude Code ─────────────────────────────────────────────────────────────────┤
-│ session 3c1149  sonnet-4-6   in 12.3k  out 1.1k  cache-r 88k    last 2s ago   │
-│ session 00a1b2  opus-4-7     in  4.0k  out   210 cache-r  2k    last 12s ago  │
-├─ Copilot CLI ─────────────────────────────────────────────────────────────────┤
-│ session f4f18c  claude-opus-4.7  in 23 156  out 90  cached 22 068  last 1s    │
-└──────────────────────────────────────────────────────────────────────────────┘
+Requires [Rust](https://rustup.rs/) 1.75+.
+
+```bash
+git clone https://github.com/Just-Jan/tokenferno
+cd tokenferno
+cargo build --release
+./target/release/tokenferno
 ```
 
-## Goals
+> Binary releases coming soon.
 
-- Single binary, zero network calls, no creds required.
-- Sub-second latency from "agent emits usage" → "TUI updates".
-- Works while multiple Claude/Copilot processes run concurrently.
-- Cross-platform (macOS first, Linux next, Windows best-effort).
+---
 
-## Non-goals
+## Usage
 
-- Replacing official billing dashboards.
-- Persisting historical data beyond what providers already write to disk.
-- Sending any session content off the machine.
+```bash
+tokenferno
+```
 
-## Capabilities
+Auto-discovers Claude Code and Copilot CLI log files and starts monitoring immediately. No config, no credentials, no setup.
 
-### v1 (acceptance bar)
+---
 
-Live, per-second view of token consumption across both Claude Code
-and Copilot CLI, with **zero network calls**.
+## Two modes
 
-**Two view modes** — a visible segmented control in the title bar of every
-view shows which mode is active and how to switch (`1` / `2` or `Tab`).
-**`inferno` is the default.**
+Switch anytime with `1` / `2` or `Tab`.
 
-#### Mode 1 · `inferno` — the burn, made visible (default)
+### Mode 1 -- INFERNO (default)
 
-The showpiece. No tables — **the screen is on fire, and your tokens are
-the fuel.** A full-screen, real-time [**DOOM fire**][doomfire] whose
-height and ferocity are driven directly by how fast Claude + Copilot are
-burning tokens right now. Idle? It dies to a flickering pilot light.
-Working hard? A towering, white-hot inferno. Good for showing a
-colleague or putting on a side monitor.
+The showpiece. No tables -- **the screen is on fire, and your tokens are the fuel.** A full-screen real-time [DOOM fire](https://fabiensanglard.net/doom_fire_psx/index.html) whose height and intensity are driven directly by how fast your agents are burning tokens right now. Idle? It dies to a flickering pilot light. Working hard? A towering, white-hot inferno.
+
+```
+┌ ● Tokenferno  INFERNO  DASHBOARD  ‹1·2 or Tab to switch · q quit›  ● BURNING ─┐
+│ CLAUDE       1 310 000 tok  ▇██▇▆▅▄▂▁▂▄▆▇█  5.9k tok/s                       │
+│ COPILOT        711 637 tok  ▆▇███████▇▆▅▃▁▂  3.1k tok/s                       │
+│                  ███   ███   ███     ███   ███                                 │
+│                 █   █ █   █ █   █   █   █ █   █     tokens burned today        │
+│                 █   █  ██  ███      ███   ███      9.0k tokens / second        │
+│                              ▲ generated 88.6k  ▼ context 1.93M               │
+│        *o:▒o*:'.:*o▒▒o:*'▒o:.*o▒█▒o*:'▒▒o:*o▒▒*:'o▒o*:.:*o▒o:*'.o▒*          │
+│  ▓█▒▓██▒▓█▓▒██▓█▒▓██▓█▒▓█▓██▒▓██▓▒██▓█▒▓██▓▒█▓██▒▓█▓██▒▓██▓▒██▓█▒▓██▓▒█      │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
 
 What's on screen:
 
-- **Live Doom fire** (`ui::doomfire`). A heat grid propagated every frame
-  with the classic random-cooldown + lateral-shift rule, mapped to a
-  true-color heat gradient (black → red → orange → yellow → white) and an
-  ASCII/box glyph ramp (` .:*o▒▓█`). The bottom fuel row is set each
-  frame from the smoothed tokens/second rate (log-scaled).
-- **Token-burst flares.** Every assistant turn injects a hot flare that
-  whooshes up the flames — so you *see* each burst land.
-- **Claude vs Copilot scoreboard.** Per-provider totals, a live
-  sparkline, and tok/s — Claude in ember-orange, Copilot in cyan.
-- **Hero odometer.** Tokens burned today in big block digits, with an
-  honest `▲ generated / ▼ context` breakdown (almost all of the total is
-  the prompt context re-sent every turn, not newly generated output).
+- **Live DOOM fire** -- a heat grid propagated every frame, mapped to a true-color gradient (black > red > orange > yellow > white) and an ASCII glyph ramp. The bottom fuel row is set from the smoothed tok/s rate.
+- **Token-burst flares** -- every assistant turn injects a hot flare you can see land.
+- **Claude vs Copilot scoreboard** -- per-provider totals, live sparklines, and tok/s. Claude in ember-orange, Copilot in cyan.
+- **Hero odometer** -- tokens burned today in big block digits, with an honest `▲ generated / ▼ context` breakdown.
 - **`● BURNING` / `○ idle` badge** and a `🔄 N in-flight` indicator.
 
-```
-┌ ● Tokenferno  INFERNO  DASHBOARD  ‹1·2 or Tab to switch · q quit› ● BURNING ─────┐
-│ CLAUDE       1 310 000 tok  ▇██▇▆▅▄▂▁▂▄▆▇█  5.9k tok/s                         │
-│ COPILOT        711 637 tok  ▆▇███████▇▆▅▃▁▂  3.1k tok/s                        │
-│                  ███   ███   ███     ███   ███                                │
-│                 █   █ █   █ █   █   █   █ █   █     tokens burned today         │
-│                 █   █  ██  ███      ███   ███      9.0k tokens / second         │
-│                              ▲ generated 88.6k  ▼ context 1.93M                │
-│        *o:▒o*:'.:*o▒▒o:*'▒o:.*o▒█▒o*:'▒▒o:*o▒▒*:'o▒o*:.:*o▒o:*'.o▒*            │
-│  ▓█▒▓██▒▓█▓▒██▓█▒▓██▓█▒▓█▓██▒▓██▓▒██▓█▒▓██▓▒█▓██▒▓█▓██▒▓██▓▒██▓█▒▓██▓▒█        │
-└───────────────────────────────────────────────────────────────────────────────┘
-```
+### Mode 2 -- DASHBOARD
 
-#### Mode 2 · `dashboard` — the data view
-
-One live operations dashboard that merges the former **hybrid** live tiles
-with the detailed per-session / recent-event tables of the former
-**nerd** view. Every *live* reading (the `LIVE` tile, the `● BURNING`
-badge, the tachometer, and each provider's tok/s) is driven by the **same
-corrected detection that fuels the fire** (`fun::live_rate` — measured ~3 s
-throughput *or* the in-flight projection) — so it actually moves while an
-agent is working, including Copilot (which logs its usage as one lump at
-the *end* of a turn and was invisible to the old short-window rates).
+One live ops dashboard that merges the live tile readings with detailed per-session and recent-event tables. Every live number is driven by the same detection engine that fuels the fire, so the two modes never disagree about what's burning.
 
 ```
-┌ ● Tokenferno  INFERNO  DASHBOARD  ‹1·2 or Tab to switch · q quit› ● BURNING ─────┐
-│ TOTAL TODAY  2 021 637   ▲ generated 88.6k  ▼ context 1.93M     💧 0.4/min     │
-├── LIVE ──────┬─ LAST BURST ┬ EVENTS/MIN ┬ TTF p50 ┬─ in-flight ────────────────┤
-│ 8.0k tok/s   │ 412 tok     │ 24.0       │ 240 ms  │ P●1·3.0s                   │
+┌ ● Tokenferno  INFERNO  DASHBOARD  ‹1·2 or Tab to switch · q quit›  ● BURNING ─┐
+│ TOTAL TODAY  2 021 637   ▲ generated 88.6k  ▼ context 1.93M     💧 0.4/min    │
+├── LIVE ──────┬─ LAST BURST ┬ EVENTS/MIN ┬ TTF p50 ┬─ in-flight ───────────────┤
+│ 8.0k tok/s   │ 412 tok     │ 24.0       │ 240 ms  │ P●1·3.0s                  │
 ├───────────────────────────────────────────────────────────────────────────────┤
-│ [██████████████████████████████████████████████████████████]  8.0k tok/s      │  ← tachometer
-│ ▁▃▅▆█▆▅▃▁······▁▃▅▆█  (100 ms heartbeat strip)                                 │
-├─ tokens/sec · last 60 s    ·    AVG 480/min · PEAK 41.0k/min @ 13:37 ──────────┤
-│      ▁▂▅▇█▇▅▃          ▁▂▄▆█▇▅▃▂          ▁▃▅▇█▇▆▄▂                             │
-├─ CLAUDE ● 5.3k/s · in 900k · out 50k · cache-r 300k ──┬─ recent events ────────┤
-│ session  model        in      out    cache-r   age    │ 13:37 C sonnet out 18  │
-│ 3c1149   sonnet-4-6   12 312  1 102  88 003     0s     │ 13:37 P opus   out 90  │
-├─ COPILOT ● 2.7k/s · in 532k · out 37k · cache-r 112k ─┤                        │
-│ session  model        in      out    cache-r   age    │                        │
-│ f4f18c   opus-4.7     23 156  90     22 068     0s     │                        │
-└───────────────────────────────────────────────────────────────────────────────┘
+│ [████████████████████████████████████████████████████████████]  8.0k tok/s   │
+│ ▁▃▅▆█▆▅▃▁······▁▃▅▆█  (100 ms heartbeat strip)                               │
+├─ CLAUDE ● 5.3k/s · in 900k · out 50k · cache-r 300k ─┬─ recent events ────────┤
+│ session  model       in      out    cache-r   age     │ 13:37 C sonnet out 18 │
+│ 3c1149   sonnet-4-6  12 312  1 102  88 003    0s      │ 13:37 P opus   out 90 │
+├─ COPILOT ● 2.7k/s · in 532k · out 37k · cache-r 112k ┤                       │
+│ session  model       in      out    cache-r   age     │                       │
+│ f4f18c   opus-4.7    23 156  90     22 068    0s      │                       │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-#### Shared keys (both modes)
+---
 
-`1` INFERNO · `2` DASHBOARD · `Tab` toggle · `c` Claude only · `p` Copilot
-only · `a` all · `r` reset session counters · `d` toggle detection HUD ·
-`q` quit.
+## Keyboard shortcuts
 
-#### Implementation notes for modes
+| Key | Action |
+|-----|--------|
+| `1` | INFERNO mode |
+| `2` | DASHBOARD mode |
+| `Tab` | Toggle modes |
+| `c` | Claude only |
+| `p` | Copilot only |
+| `a` | All providers |
+| `r` | Reset session counters |
+| `d` | Toggle detection HUD |
+| `q` | Quit |
 
-- Both modes read the **same** `Snapshot` from the aggregator; modes are
-  pure presentation. No mode-specific ingestion logic.
-- Every view's title bar is built by the shared `ui::title_bar`, so the
-  animated pulse, the app name, the mode tabs, and the BURNING badge sit in
-  identical columns — switching modes never shifts the header.
-- `ui::fun::render` (INFERNO) and `ui::dashboard::render` each take the
-  snapshot; switching modes is a one-line state change. The DASHBOARD
-  sources all of its live readings from `ui::fun::live_rate` /
-  `provider_live_rate`, so it and the INFERNO fire never disagree about
-  what's burning.
-- INFERNO animation state (the `doomfire::FireField` heat grid + pending
-  flare energy) lives in `ui::fun::FunState` across frames, so `render`
-  stays a pure function of its inputs and the aggregator stays pure.
-- Default mode: `inferno`.
+---
 
-[doomfire]: https://fabiensanglard.net/doom_fire_psx/index.html
+## Data sources
 
-### v2+ (feasible from the same local data)
+No network calls, no credentials. tokenferno reads only the log files your agents already write.
 
-- "Tokens left" gauges (Claude rolling 5h turns vs plan; Copilot
-  premium-requests vs monthly quota).
-- $ cost estimate for Claude (model + cache-tier aware). Copilot stays
-  in "premium requests" — GitHub doesn't bill in $.
-- Per-repo / per-branch breakdown (`cwd` + `gitBranch` from Claude
-  JSONL; `sessions.cwd/branch` from Copilot's SQLite).
-- Model-mix pie chart.
-- Reasoning-token call-out for Copilot o-series.
-- 80%-of-window desktop notification.
-- Prometheus exporter (`--serve :9876`) → Grafana.
-- Replay mode (scrub historical usage).
-- CSV/JSON export.
-- Diff-with-yesterday mode.
+| Provider | Source | Real-time? |
+|----------|--------|------------|
+| Claude Code | `~/.claude/projects/**/*.jsonl` | ✅ append |
+| GitHub Copilot CLI | `~/.copilot/logs/process-*.log` | ✅ append |
+| GitHub Copilot CLI | `~/.copilot/session-store.db` (context) | ✅ SQLite |
 
-### Out of scope (any version)
+---
 
-- Usage from non-CLI clients (claude.ai web, Copilot-in-IDE, mobile)
-  — those don't write to `~/.claude` or `~/.copilot`.
-- Authoritative "remaining quota" — providers don't expose it
-  locally; v2's number is always a **lower-bound estimate**.
-- Tracking server-side rate limits that change without notice.
+## Roadmap
 
-## Prior art worth studying
+### v1 -- current
+- [x] Real-time token burn for Claude Code + Copilot CLI
+- [x] INFERNO mode (DOOM fire)
+- [x] DASHBOARD mode
+- [x] Claude-vs-Copilot scoreboard with live sparklines
+- [x] `▲ generated / ▼ context` split
 
-- [`ccusage`](https://github.com/ryoppippi/ccusage) — node CLI that
-  parses Claude Code JSONL and prints usage tables. Good reference for
-  field semantics & price tables.
+### v2+
+- [ ] "Tokens left" gauges (Claude rolling 5h window; Copilot monthly quota estimate)
+- [ ] $ cost estimate for Claude (model + cache-tier aware)
+- [ ] Per-repo / per-branch breakdown
+- [ ] Model-mix breakdown
+- [ ] 80%-of-window desktop notification
+- [ ] Prometheus exporter (`--serve :9876`)
+- [ ] Replay mode (scrub historical usage)
+- [ ] CSV / JSON export
 
-[ratatui]: https://ratatui.rs/
+---
+
+## Goals
+
+- Single binary, zero network calls, no credentials required
+- Sub-second latency from "agent emits usage" to "TUI updates"
+- Works while multiple Claude / Copilot processes run concurrently
+- Cross-platform: macOS first, Linux next, Windows best-effort
+
+## Non-goals
+
+- Replacing official billing dashboards
+- Persisting historical data beyond what providers already write to disk
+- Sending any session content off the machine
+- Authoritative "remaining quota" (providers don't expose this locally; any v2 gauge is a lower-bound estimate)
+
+---
+
+## Prior art
+
+- [`ccusage`](https://github.com/ryoppippi/ccusage) -- node CLI that parses Claude Code JSONL and prints usage tables. Good reference for field semantics and price tables.
+
+---
+
+Built with [Rust](https://www.rust-lang.org/) + [ratatui](https://ratatui.rs/). MIT license.
