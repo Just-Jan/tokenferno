@@ -72,15 +72,15 @@ What's on screen:
 - **`● BURNING` / `○ idle` badge** and a `🔄 N in-flight` indicator.
 
 ```
-┌ ● Tokenferno  INFERNO  DASHBOARD  ‹1·2 or Tab to switch · q quit›  ● BURNING ─┐
-│ CLAUDE       1 310 000 tok  ▇██▇▆▅▄▂▁▂▄▆▇█  5.9k tok/s                       │
-│ COPILOT        711 637 tok  ▆▇███████▇▆▅▃▁▂  3.1k tok/s                       │
-│                  ███   ███   ███     ███   ███                                 │
-│                 █   █ █   █ █   █   █   █ █   █     tokens burned today        │
-│                 █   █  ██  ███      ███   ███      9.0k tokens / second        │
-│                              ▲ generated 88.6k  ▼ context 1.93M               │
-│        *o:▒o*:'.:*o▒▒o:*'▒o:.*o▒█▒o*:'▒▒o:*o▒▒*:'o▒o*:.:*o▒o:*'.o▒*          │
-│  ▓█▒▓██▒▓█▓▒██▓█▒▓██▓█▒▓█▓██▒▓██▓▒██▓█▒▓██▓▒█▓██▒▓█▓██▒▓██▓▒██▓█▒▓██▓▒█      │
+┌ ● Tokenferno  INFERNO  DASHBOARD  ‹1·2 or Tab to switch · q quit›  ● BURNING ───┐
+│ CLAUDE       1 310 000 tok  ▇██▇▆▅▄▂▁▂▄▆▇█  5.9k tok/s                          │
+│ COPILOT        711 637 tok  ▆▇███████▇▆▅▃▁▂  3.1k tok/s                         │
+│                  ███   ███   ███     ███   ███                                  │
+│                 █   █ █   █ █   █   █   █ █   █     tokens burned today         │
+│                 █   █  ██  ███      ███   ███      9.0k tokens / second         │
+│                              ▲ generated 88.6k  ▼ context 1.93M                 │
+│        *o:▒o*:'.:*o▒▒o:*'▒o:.*o▒█▒o*:'▒▒o:*o▒▒*:'o▒o*:.:*o▒o:*'.o▒*             │
+│  ▓█▒▓██▒▓█▓▒██▓█▒▓██▓█▒▓█▓██▒▓██▓▒██▓█▒▓██▓▒█▓██▒▓█▓██▒▓██▓▒██▓█▒▓██▓▒█         │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -89,21 +89,21 @@ What's on screen:
 The same data, cold and honest. Per-session tables, a tachometer, a recent-events feed -- every live number driven by the same detection engine as the fire, so the two modes never disagree about what's burning.
 
 ```
-┌ ● Tokenferno  INFERNO  DASHBOARD  ‹1·2 or Tab to switch · q quit›  ● BURNING ─┐
-│ TOTAL TODAY  2 021 637   ▲ generated 88.6k  ▼ context 1.93M     💧 0.4/min    │
-├── LIVE ──────┬─ LAST BURST ┬ EVENTS/MIN ┬ TTF p50 ┬─ in-flight ───────────────┤
-│ 8.0k tok/s   │ 412 tok     │ 24.0       │ 240 ms  │ P●1·3.0s                  │
-├───────────────────────────────────────────────────────────────────────────────┤
-│ [████████████████████████████████████████████████████████████]  8.0k tok/s   │
-│ ▁▃▅▆█▆▅▃▁······▁▃▅▆█  (100 ms heartbeat strip)                               │
-├─ tokens/sec · last 60 s    ·    AVG 480/min · PEAK 41.0k/min @ 13:37 ─────────┤
-│      ▁▂▅▇█▇▅▃          ▁▂▄▆█▇▅▃▂          ▁▃▅▇█▇▆▄▂                           │
-├─ CLAUDE ● 5.3k/s · in 900k · out 50k · cache-r 300k ─┬─ recent events ────────┤
-│ session  model       in      out    cache-r   age     │ 13:37 C sonnet out 18 │
-│ 3c1149   sonnet-4-6  12 312  1 102  88 003    0s      │ 13:37 P opus   out 90 │
-├─ COPILOT ● 2.7k/s · in 532k · out 37k · cache-r 112k ┤                       │
-│ session  model       in      out    cache-r   age     │                       │
-│ f4f18c   opus-4.7    23 156  90     22 068    0s      │                       │
+┌ ● Tokenferno  INFERNO  DASHBOARD  ‹1·2 or Tab to switch · q quit›  ● BURNING ───┐
+│ TOTAL TODAY  2 021 637   ▲ generated 88.6k  ▼ context 1.93M     💧 0.4/min      │
+├── LIVE ──────┬─ LAST BURST ┬ EVENTS/MIN ┬ TTF p50 ┬─ in-flight ─────────────────┤
+│ 8.0k tok/s   │ 412 tok     │ 24.0       │ 240 ms  │ P●1·3.0s                    │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ [████████████████████████████████████████████████████████████]  8.0k tok/s      │
+│ ▁▃▅▆█▆▅▃▁······▁▃▅▆█  (100 ms heartbeat strip)                                  │
+├─ tokens/sec · last 60 s    ·    AVG 480/min · PEAK 41.0k/min @ 13:37 ───────────┤
+│      ▁▂▅▇█▇▅▃          ▁▂▄▆█▇▅▃▂          ▁▃▅▇█▇▆▄▂                             │
+├─ CLAUDE ● 5.3k/s · in 900k · out 50k · cache-r 300k ─┬─ recent events ──────────┤
+│ session  model       in      out    cache-r   age     │ 13:37 C sonnet out 18   │
+│ 3c1149   sonnet-4-6  12 312  1 102  88 003    0s      │ 13:37 P opus   out 90   │
+├─ COPILOT ● 2.7k/s · in 532k · out 37k · cache-r 112k ┤                          │
+│ session  model       in      out    cache-r   age     │                         │
+│ f4f18c   opus-4.7    23 156  90     22 068    0s      │                         │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
