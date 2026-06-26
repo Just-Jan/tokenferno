@@ -1,5 +1,8 @@
 # 🔥 Tokenferno
 
+<img width="1672" height="941" alt="E6E50818-1946-444F-932F-98590147C5F6" src="https://github.com/user-attachments/assets/03eab1f7-dc2e-4906-9500-3b181c0035c6" />
+
+
 > Real-time TUI that shows how many tokens your AI coding agents are
 > incinerating right now — and how much runway you have left this
 > hour / day / month.
