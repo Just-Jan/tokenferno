@@ -1,7 +1,5 @@
 use crate::ingest::IngestMessage;
-use crate::model::{
-    BurnBucket, Provider, RecentEvent, SessionStat, Snapshot, Totals, UsageEvent,
-};
+use crate::model::{BurnBucket, Provider, RecentEvent, SessionStat, Snapshot, Totals, UsageEvent};
 use chrono::{DateTime, Datelike, Utc};
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::sync::Arc;
@@ -40,12 +38,12 @@ pub struct Aggregator {
     by_provider: HashMap<&'static str, Totals>,
     sessions: HashMap<(Provider, String), SessionStat>,
     recent: VecDeque<RecentEvent>,
-    buckets: BTreeMap<i64, u64>,                   // unix-minute -> tokens
+    buckets: BTreeMap<i64, u64>, // unix-minute -> tokens
     buckets_provider: HashMap<&'static str, BTreeMap<i64, u64>>,
-    decis: BTreeMap<i64, u64>,                     // unix_ms/100 -> tokens (last ~60s)
+    decis: BTreeMap<i64, u64>, // unix_ms/100 -> tokens (last ~60s)
     decis_provider: HashMap<&'static str, BTreeMap<i64, u64>>,
-    events_minute: BTreeMap<i64, u32>,             // unix-minute -> event count
-    drip_minute: BTreeMap<i64, u32>,               // unix-minute -> small-event count
+    events_minute: BTreeMap<i64, u32>, // unix-minute -> event count
+    drip_minute: BTreeMap<i64, u32>,   // unix-minute -> small-event count
     last_event_at: Option<DateTime<Utc>>,
     last_event_tokens: u64,
     peak_rate: f64,
@@ -81,6 +79,12 @@ pub struct Aggregator {
     seen_ids: HashSet<String>,
     dropped: u64,
     last_error: Option<String>,
+}
+
+impl Default for Aggregator {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Aggregator {
@@ -210,10 +214,17 @@ impl Aggregator {
                 let elapsed = (now - start).num_milliseconds().max(1000) as f64 / 1000.0;
                 let tps = ((ev.total_tokens as f64) / elapsed).min(MAX_SANE_TPS);
                 let hist = self.tps_history.entry(ev.provider.label()).or_default();
-                if hist.len() == HISTORY_CAP { hist.pop_front(); }
+                if hist.len() == HISTORY_CAP {
+                    hist.pop_front();
+                }
                 hist.push_back(tps);
-                let dhist = self.duration_history.entry(ev.provider.label()).or_default();
-                if dhist.len() == HISTORY_CAP { dhist.pop_front(); }
+                let dhist = self
+                    .duration_history
+                    .entry(ev.provider.label())
+                    .or_default();
+                if dhist.len() == HISTORY_CAP {
+                    dhist.pop_front();
+                }
                 dhist.push_back(elapsed);
                 response_start = Some(start);
             }
@@ -278,10 +289,11 @@ impl Aggregator {
                 let remainder = delta_total % span;
                 for i in 0..span {
                     let d = start_deci + i as i64;
-                    let add = per + if (i as u64) < remainder { 1 } else { 0 };
+                    let add = per + if i < remainder { 1 } else { 0 };
                     if add > 0 {
                         *self.decis.entry(d).or_insert(0) += add;
-                        *self.decis_provider
+                        *self
+                            .decis_provider
                             .entry(ev.provider.label())
                             .or_default()
                             .entry(d)
@@ -290,7 +302,8 @@ impl Aggregator {
                 }
             } else if delta_total > 0 {
                 *self.decis.entry(end_ms / 100).or_insert(0) += delta_total;
-                *self.decis_provider
+                *self
+                    .decis_provider
                     .entry(ev.provider.label())
                     .or_default()
                     .entry(end_ms / 100)
@@ -325,17 +338,15 @@ impl Aggregator {
     /// `source`. Increments today/by_provider/buckets so the user sees tokens
     /// flowing in real time; the eventual `Event` reconciles the delta.
     fn ingest_partial(&mut self, source: &'static str, est_tokens: u32) {
-        if est_tokens == 0 { return; }
+        if est_tokens == 0 {
+            return;
+        }
         self.rotate_day_if_needed();
         let n = est_tokens as u64;
         // Align credited_in_flight with in_flight: ensure the deque has at
         // least as many entries as in_flight; back-fill with zeros for any
         // pre-existing requests that weren't tracked.
-        let in_flight_len = self
-            .in_flight
-            .get(source)
-            .map(|q| q.len())
-            .unwrap_or(0);
+        let in_flight_len = self.in_flight.get(source).map(|q| q.len()).unwrap_or(0);
         let cq = self.credited_in_flight.entry(source).or_default();
         while cq.len() < in_flight_len {
             cq.push_back(0);
@@ -352,7 +363,8 @@ impl Aggregator {
         self.by_provider.entry(source).or_default().total += n;
         let now_ms = now.timestamp_millis();
         *self.decis.entry(now_ms / 100).or_insert(0) += n;
-        *self.decis_provider
+        *self
+            .decis_provider
             .entry(source)
             .or_default()
             .entry(now_ms / 100)
@@ -371,7 +383,9 @@ impl Aggregator {
     /// Synthetic small "drip" burn from a tool_use / cache-only marker.
     /// Counted as part of `today.total` and as a drip event.
     fn ingest_micro(&mut self, source: &'static str, tokens: u32) {
-        if tokens == 0 { return; }
+        if tokens == 0 {
+            return;
+        }
         self.rotate_day_if_needed();
         let n = tokens as u64;
         let now = Utc::now();
@@ -382,7 +396,8 @@ impl Aggregator {
         bp.events += 1;
         let now_ms = now.timestamp_millis();
         *self.decis.entry(now_ms / 100).or_insert(0) += n;
-        *self.decis_provider
+        *self
+            .decis_provider
             .entry(source)
             .or_default()
             .entry(now_ms / 100)
@@ -408,7 +423,9 @@ impl Aggregator {
         // Cap pending_ttf — defensive: if Activity for a RequestStart is ever
         // missed (race / log rotation), avoid unbounded growth.
         for q in self.pending_ttf.values_mut() {
-            while q.len() > HISTORY_CAP { q.pop_front(); }
+            while q.len() > HISTORY_CAP {
+                q.pop_front();
+            }
         }
         let now = Utc::now();
         let now_min = now.timestamp() / 60;
@@ -512,7 +529,10 @@ impl Aggregator {
             burn_per_decisec_by_provider
                 .iter()
                 .map(|(k, v)| {
-                    (*k, v.chunks(10).map(|c| c.iter().sum()).collect::<Vec<u64>>())
+                    (
+                        *k,
+                        v.chunks(10).map(|c| c.iter().sum()).collect::<Vec<u64>>(),
+                    )
                 })
                 .collect();
 
@@ -576,7 +596,7 @@ impl Aggregator {
         let session_cutoff = now - chrono::Duration::seconds(SESSION_IDLE_SECS);
         self.sessions.retain(|_, s| s.last_seen > session_cutoff);
         let mut sessions: Vec<SessionStat> = self.sessions.values().cloned().collect();
-        sessions.sort_by(|a, b| b.last_seen.cmp(&a.last_seen));
+        sessions.sort_by_key(|s| std::cmp::Reverse(s.last_seen));
 
         let by_provider: BTreeMap<&'static str, Totals> = self
             .by_provider
@@ -615,11 +635,7 @@ impl Aggregator {
             events_per_min,
             watched_files: self.file_counts.values().sum(),
             dropped_events: self.dropped,
-            last_activity_at: self
-                .last_activity
-                .iter()
-                .map(|(k, v)| (*k, *v))
-                .collect(),
+            last_activity_at: self.last_activity.iter().map(|(k, v)| (*k, *v)).collect(),
             in_flight: self
                 .in_flight
                 .iter()
@@ -693,14 +709,18 @@ fn build_buckets(map: &BTreeMap<i64, u64>, now_min: i64) -> Vec<BurnBucket> {
 }
 
 fn median_f64(v: &VecDeque<f64>) -> f64 {
-    if v.is_empty() { return 0.0; }
+    if v.is_empty() {
+        return 0.0;
+    }
     let mut s: Vec<f64> = v.iter().copied().collect();
     s.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     s[s.len() / 2]
 }
 
 fn median_u64(v: &VecDeque<u64>) -> u64 {
-    if v.is_empty() { return 0; }
+    if v.is_empty() {
+        return 0;
+    }
     let mut s: Vec<u64> = v.iter().copied().collect();
     s.sort();
     s[s.len() / 2]
@@ -987,7 +1007,12 @@ mod tests {
             snap.by_provider.get("copilot").unwrap().total
         );
         // Sanity: at least all authoritative tokens are present.
-        assert!(snap.today.total >= expected, "total {} < expected {}", snap.today.total, expected);
+        assert!(
+            snap.today.total >= expected,
+            "total {} < expected {}",
+            snap.today.total,
+            expected
+        );
     }
 
     /// In the well-behaved case (estimates ≤ authoritative), totals match exactly.

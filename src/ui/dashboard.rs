@@ -24,13 +24,7 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph, Row, Sparkline, Table};
 use ratatui::Frame;
 
-pub fn render(
-    f: &mut Frame,
-    snap: &Snapshot,
-    filter: Filter,
-    displayed_total: u64,
-    frame: u64,
-) {
+pub fn render(f: &mut Frame, snap: &Snapshot, filter: Filter, displayed_total: u64, frame: u64) {
     let area = f.area();
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -208,11 +202,7 @@ fn render_kpis(f: &mut Frame, area: Rect, snap: &Snapshot, filter: Filter) {
         " —".to_string()
     };
     f.render_widget(
-        tile(
-            last_burst,
-            Style::default().fg(Color::Cyan),
-            " LAST BURST ",
-        ),
+        tile(last_burst, Style::default().fg(Color::Cyan), " LAST BURST "),
         chunks[1],
     );
 

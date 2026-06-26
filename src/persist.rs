@@ -55,7 +55,11 @@ pub fn migrate_legacy_dir() {
 fn migrate_dir_at(legacy: &Path, current: &Path) {
     if legacy.is_dir() && !current.exists() {
         match std::fs::rename(legacy, current) {
-            Ok(()) => tracing::info!(?legacy, ?current, "migrated legacy data dir → ~/.tokenferno"),
+            Ok(()) => tracing::info!(
+                ?legacy,
+                ?current,
+                "migrated legacy data dir → ~/.tokenferno"
+            ),
             Err(e) => tracing::warn!(error = ?e, "failed to migrate legacy data dir"),
         }
     }
@@ -98,9 +102,7 @@ pub async fn append(ev: &UsageEvent) -> Result<()> {
         }
     }
 
-    let line = serde_json::to_string(ev)
-        .map_err(|e| anyhow!("persist serialize: {e}"))?
-        + "\n";
+    let line = serde_json::to_string(ev).map_err(|e| anyhow!("persist serialize: {e}"))? + "\n";
 
     let slot = log_slot();
     let mut guard = slot.lock().await;
@@ -149,7 +151,9 @@ pub fn replay_today() -> Result<Vec<UsageEvent>> {
         }
         match serde_json::from_str::<UsageEvent>(trimmed) {
             Ok(ev) => out.push(ev),
-            Err(e) => tracing::warn!(line_no = i + 1, error = %e, "persist: skipping malformed line"),
+            Err(e) => {
+                tracing::warn!(line_no = i + 1, error = %e, "persist: skipping malformed line")
+            }
         }
     }
     Ok(out)
@@ -189,7 +193,10 @@ mod tests {
         std::fs::write(legacy.join("events-2026-06-25.jsonl"), b"{\"t\":1}\n").unwrap();
 
         migrate_dir_at(&legacy, &current);
-        assert!(!legacy.exists(), "legacy dir should be gone after migration");
+        assert!(
+            !legacy.exists(),
+            "legacy dir should be gone after migration"
+        );
         assert_eq!(
             std::fs::read_to_string(current.join("events-2026-06-25.jsonl")).unwrap(),
             "{\"t\":1}\n",

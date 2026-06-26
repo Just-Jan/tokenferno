@@ -50,8 +50,7 @@ pub async fn serve(path: &Path, tx: EventSender) -> Result<()> {
     ensure_parent(path).ok();
     // Stale socket file may exist from a previous crashed TUI.
     let _ = std::fs::remove_file(path);
-    let listener = UnixListener::bind(path)
-        .map_err(|e| anyhow!("ipc bind {path:?}: {e}"))?;
+    let listener = UnixListener::bind(path).map_err(|e| anyhow!("ipc bind {path:?}: {e}"))?;
     tracing::info!(?path, "ipc: listening");
     loop {
         let (stream, _addr) = match listener.accept().await {
@@ -180,11 +179,15 @@ mod tests {
         });
 
         snd_tx
-            .send(IngestMessage::Activity { source: "claude".into() })
+            .send(IngestMessage::Activity {
+                source: "claude".into(),
+            })
             .await
             .unwrap();
         snd_tx
-            .send(IngestMessage::RequestStart { source: "copilot".into() })
+            .send(IngestMessage::RequestStart {
+                source: "copilot".into(),
+            })
             .await
             .unwrap();
         drop(snd_tx); // close sender so client task exits cleanly

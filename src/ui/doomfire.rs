@@ -171,6 +171,9 @@ fn build_palette() -> [(char, Color); (MAX as usize) + 1] {
     ];
 
     let mut out = [(' ', Color::Black); (MAX as usize) + 1];
+    // The index drives both the interpolation parameter `t` and the glyph
+    // bucket below, so a range loop is clearer here than `enumerate`.
+    #[allow(clippy::needless_range_loop)]
     for i in 0..=MAX as usize {
         let t = i as f64 / MAX as f64;
         // Find surrounding stops and interpolate.
@@ -184,11 +187,7 @@ fn build_palette() -> [(char, Color); (MAX as usize) + 1] {
                 } else {
                     (t - t0) / (t1 - t0)
                 };
-                c = (
-                    r0 + (r1 - r0) * f,
-                    g0 + (g1 - g0) * f,
-                    b0 + (b1 - b0) * f,
-                );
+                c = (r0 + (r1 - r0) * f, g0 + (g1 - g0) * f, b0 + (b1 - b0) * f);
                 break;
             }
         }

@@ -22,16 +22,29 @@ pub fn intern_source(s: &str) -> &'static str {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum IngestMessage {
     Event(UsageEvent),
-    FileCount { source: String, count: usize },
-    Activity { source: String },
+    FileCount {
+        source: String,
+        count: usize,
+    },
+    Activity {
+        source: String,
+    },
     /// Detected the *start* of an inference request (before usage lands).
-    RequestStart { source: String },
+    RequestStart {
+        source: String,
+    },
     /// Synthetic small "drip" burn (e.g. tool_use marker on Claude) used to
     /// keep the meter alive during long requests.
-    MicroBurn { source: String, tokens: u32 },
+    MicroBurn {
+        source: String,
+        tokens: u32,
+    },
     /// Streaming partial-token estimate from an in-flight request (e.g. SSE
     /// `delta.content` chunks). Reconciled at completion against the
     /// authoritative `Event`.
-    PartialDelta { source: String, est_tokens: u32 },
+    PartialDelta {
+        source: String,
+        est_tokens: u32,
+    },
     Error(String),
 }

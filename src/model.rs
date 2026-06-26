@@ -74,6 +74,8 @@ pub struct SessionStat {
 }
 
 #[derive(Debug, Clone)]
+// Fields form the UI data model; not every field is surfaced by every view.
+#[allow(dead_code)]
 pub struct RecentEvent {
     pub ts: DateTime<Utc>,
     pub provider: Provider,
@@ -86,12 +88,16 @@ pub struct RecentEvent {
 
 /// One bucket in the rolling sparkline (per minute).
 #[derive(Debug, Clone, Copy, Default)]
+// `minute` is retained for ordering/debugging though no view reads it directly.
+#[allow(dead_code)]
 pub struct BurnBucket {
     pub minute: i64, // unix-minute
     pub tokens: u64,
 }
 
 #[derive(Debug, Clone, Default)]
+// The aggregator fills every field; individual views read different subsets.
+#[allow(dead_code)]
 pub struct Snapshot {
     pub generated_at: DateTime<Utc>,
     pub today: Totals,

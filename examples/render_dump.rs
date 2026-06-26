@@ -4,13 +4,13 @@
 //!
 //! Usage: cargo run --example render_dump -- [mode] [rate_tps] [ticks]
 
-use tokenferno::model::{Provider, RecentEvent, SessionStat, Snapshot, Totals};
-use tokenferno::ui::{self, Filter};
 use chrono::Utc;
 use ratatui::backend::TestBackend;
 use ratatui::buffer::Buffer;
 use ratatui::style::Color;
 use ratatui::Terminal;
+use tokenferno::model::{Provider, RecentEvent, SessionStat, Snapshot, Totals};
+use tokenferno::ui::{self, Filter};
 
 fn to_rgb(c: Color, bg: bool) -> (u8, u8, u8) {
     match c {
@@ -60,6 +60,8 @@ fn dump(buf: &Buffer) {
     }
 }
 
+// Sequential field assignment keeps this large synthetic fixture readable.
+#[allow(clippy::field_reassign_with_default)]
 fn synthetic(rate_tps: f64) -> Snapshot {
     let now = Utc::now();
     let mut s = Snapshot::default();
@@ -75,11 +77,27 @@ fn synthetic(rate_tps: f64) -> Snapshot {
     };
     s.by_provider.insert(
         "claude",
-        Totals { input: 900_000, output: 50_000, cache_read: 300_000, cache_creation: 60_000, reasoning: 0, total: 1_310_000, events: 200 },
+        Totals {
+            input: 900_000,
+            output: 50_000,
+            cache_read: 300_000,
+            cache_creation: 60_000,
+            reasoning: 0,
+            total: 1_310_000,
+            events: 200,
+        },
     );
     s.by_provider.insert(
         "copilot",
-        Totals { input: 532_105, output: 37_412, cache_read: 112_880, cache_creation: 28_040, reasoning: 1200, total: 711_637, events: 118 },
+        Totals {
+            input: 532_105,
+            output: 37_412,
+            cache_read: 112_880,
+            cache_creation: 28_040,
+            reasoning: 1200,
+            total: 711_637,
+            events: 118,
+        },
     );
     s.micro_rate_tps = rate_tps;
     s.instant_rate_tps = rate_tps;
@@ -91,20 +109,32 @@ fn synthetic(rate_tps: f64) -> Snapshot {
     s.last_event_tokens = 412;
     s.events_per_min = 24.0;
     s.watched_files = 6;
-    s.micro_rate_tps_by_provider.insert("claude", rate_tps * 0.66);
-    s.micro_rate_tps_by_provider.insert("copilot", rate_tps * 0.34);
-    s.current_rate_tps_by_provider.insert("claude", rate_tps * 0.66);
-    s.current_rate_tps_by_provider.insert("copilot", rate_tps * 0.34);
-    s.current_rate_tpm_by_provider.insert("claude", rate_tps * 60.0 * 0.66);
-    s.current_rate_tpm_by_provider.insert("copilot", rate_tps * 60.0 * 0.34);
-    s.burn_per_sec = (0..60).map(|i| ((i as f64 / 6.0).sin().abs() * rate_tps) as u64).collect();
+    s.micro_rate_tps_by_provider
+        .insert("claude", rate_tps * 0.66);
+    s.micro_rate_tps_by_provider
+        .insert("copilot", rate_tps * 0.34);
+    s.current_rate_tps_by_provider
+        .insert("claude", rate_tps * 0.66);
+    s.current_rate_tps_by_provider
+        .insert("copilot", rate_tps * 0.34);
+    s.current_rate_tpm_by_provider
+        .insert("claude", rate_tps * 60.0 * 0.66);
+    s.current_rate_tpm_by_provider
+        .insert("copilot", rate_tps * 60.0 * 0.34);
+    s.burn_per_sec = (0..60)
+        .map(|i| ((i as f64 / 6.0).sin().abs() * rate_tps) as u64)
+        .collect();
     s.burn_per_sec_by_provider.insert(
         "claude",
-        (0..60).map(|i| ((i as f64 / 5.0).sin().abs() * rate_tps * 0.66) as u64).collect(),
+        (0..60)
+            .map(|i| ((i as f64 / 5.0).sin().abs() * rate_tps * 0.66) as u64)
+            .collect(),
     );
     s.burn_per_sec_by_provider.insert(
         "copilot",
-        (0..60).map(|i| ((i as f64 / 7.0).cos().abs() * rate_tps * 0.34) as u64).collect(),
+        (0..60)
+            .map(|i| ((i as f64 / 7.0).cos().abs() * rate_tps * 0.34) as u64)
+            .collect(),
     );
     s.burn_per_min = Vec::new();
     // Live decisecond buckets — THIS is what `live_rate` (and so the whole
@@ -122,10 +152,14 @@ fn synthetic(rate_tps: f64) -> Snapshot {
             }
         })
         .collect();
-    s.burn_per_decisec_by_provider
-        .insert("claude", decis.iter().map(|v| (*v as f64 * 0.66) as u64).collect());
-    s.burn_per_decisec_by_provider
-        .insert("copilot", decis.iter().map(|v| (*v as f64 * 0.34) as u64).collect());
+    s.burn_per_decisec_by_provider.insert(
+        "claude",
+        decis.iter().map(|v| (*v as f64 * 0.66) as u64).collect(),
+    );
+    s.burn_per_decisec_by_provider.insert(
+        "copilot",
+        decis.iter().map(|v| (*v as f64 * 0.34) as u64).collect(),
+    );
     s.burn_per_decisec = decis;
     // One in-flight Copilot request, mid-generation, to light the in-flight
     // tile and the projection.
@@ -139,14 +173,73 @@ fn synthetic(rate_tps: f64) -> Snapshot {
     s.last_activity_at.insert("claude", now);
     s.last_activity_at.insert("copilot", now);
     s.sessions = vec![
-        SessionStat { provider: Provider::Claude, session_id: "3c1149aa".into(), model: "claude-sonnet-4-6".into(), totals: Totals { input: 12_312, output: 1_102, cache_read: 88_003, cache_creation: 4_950, reasoning: 0, total: 106_367, events: 12 }, last_seen: now },
-        SessionStat { provider: Provider::Claude, session_id: "00a1b2cc".into(), model: "claude-opus-4-7".into(), totals: Totals { input: 4_050, output: 210, cache_read: 1_998, cache_creation: 0, reasoning: 0, total: 6_258, events: 4 }, last_seen: now },
-        SessionStat { provider: Provider::Copilot, session_id: "f4f18cdd".into(), model: "claude-opus-4.7".into(), totals: Totals { input: 23_156, output: 90, cache_read: 22_068, cache_creation: 0, reasoning: 0, total: 23_246, events: 9 }, last_seen: now },
+        SessionStat {
+            provider: Provider::Claude,
+            session_id: "3c1149aa".into(),
+            model: "claude-sonnet-4-6".into(),
+            totals: Totals {
+                input: 12_312,
+                output: 1_102,
+                cache_read: 88_003,
+                cache_creation: 4_950,
+                reasoning: 0,
+                total: 106_367,
+                events: 12,
+            },
+            last_seen: now,
+        },
+        SessionStat {
+            provider: Provider::Claude,
+            session_id: "00a1b2cc".into(),
+            model: "claude-opus-4-7".into(),
+            totals: Totals {
+                input: 4_050,
+                output: 210,
+                cache_read: 1_998,
+                cache_creation: 0,
+                reasoning: 0,
+                total: 6_258,
+                events: 4,
+            },
+            last_seen: now,
+        },
+        SessionStat {
+            provider: Provider::Copilot,
+            session_id: "f4f18cdd".into(),
+            model: "claude-opus-4.7".into(),
+            totals: Totals {
+                input: 23_156,
+                output: 90,
+                cache_read: 22_068,
+                cache_creation: 0,
+                reasoning: 0,
+                total: 23_246,
+                events: 9,
+            },
+            last_seen: now,
+        },
     ];
     s.recent = vec![
-        RecentEvent { ts: now, provider: Provider::Claude, session_id: "3c1149".into(), model: "sonnet-4-6".into(), input: 412, output: 18, cache_read: 1200 },
-        RecentEvent { ts: now, provider: Provider::Copilot, session_id: "f4f18c".into(), model: "opus-4.7".into(), input: 23000, output: 90, cache_read: 22000 },
-    ].into();
+        RecentEvent {
+            ts: now,
+            provider: Provider::Claude,
+            session_id: "3c1149".into(),
+            model: "sonnet-4-6".into(),
+            input: 412,
+            output: 18,
+            cache_read: 1200,
+        },
+        RecentEvent {
+            ts: now,
+            provider: Provider::Copilot,
+            session_id: "f4f18c".into(),
+            model: "opus-4.7".into(),
+            input: 23000,
+            output: 90,
+            cache_read: 22000,
+        },
+    ]
+    .into();
     s
 }
 
@@ -158,8 +251,14 @@ fn main() {
     let debug = args.get(4).map(|s| s == "debug").unwrap_or(false);
 
     let snap = synthetic(rate);
-    let w: u16 = std::env::var("TF_DUMP_W").ok().and_then(|s| s.parse().ok()).unwrap_or(100);
-    let h: u16 = std::env::var("TF_DUMP_H").ok().and_then(|s| s.parse().ok()).unwrap_or(34);
+    let w: u16 = std::env::var("TF_DUMP_W")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(100);
+    let h: u16 = std::env::var("TF_DUMP_H")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(34);
     let backend = TestBackend::new(w, h);
     let mut terminal = Terminal::new(backend).unwrap();
     let mut fun_state = ui::fun::FunState::new();

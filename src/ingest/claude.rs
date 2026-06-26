@@ -104,7 +104,8 @@ pub async fn run(root: PathBuf, tx: EventSender) -> Result<()> {
     let mut rescan = tokio::time::interval(Duration::from_secs(2));
 
     let (active_tx, mut active_rx) = tokio::sync::mpsc::channel::<PathBuf>(64);
-    let mut polling: HashMap<PathBuf, std::sync::Arc<std::sync::atomic::AtomicBool>> = HashMap::new();
+    let mut polling: HashMap<PathBuf, std::sync::Arc<std::sync::atomic::AtomicBool>> =
+        HashMap::new();
     const POLL_INTERVAL: Duration = Duration::from_millis(75);
     super::fswatch::sync_active_polls(&active, &mut polling, &active_tx, POLL_INTERVAL);
 
@@ -152,8 +153,8 @@ fn is_target_jsonl(p: &Path) -> bool {
 
 async fn scan_active_jsonl(root: &Path) -> Vec<PathBuf> {
     let all = scan_jsonl(root);
-    let cutoff = std::time::SystemTime::now()
-        .checked_sub(Duration::from_secs(ACTIVE_JSONL_MAX_AGE_SECS));
+    let cutoff =
+        std::time::SystemTime::now().checked_sub(Duration::from_secs(ACTIVE_JSONL_MAX_AGE_SECS));
     let mut out = Vec::new();
     for p in all {
         if let Ok(meta) = tokio::fs::metadata(&p).await {
@@ -248,7 +249,9 @@ async fn poll_file(
         return Ok(());
     }
     let _ = tx
-        .send(IngestMessage::Activity { source: "claude".into() })
+        .send(IngestMessage::Activity {
+            source: "claude".into(),
+        })
         .await;
     // Parse complete lines from buf; if it doesn't end in '\n', stash the
     // tail back by rewinding the file position so next read sees it again.
@@ -265,7 +268,9 @@ async fn poll_file(
         }
         if trimmed.contains(r#""type":"user""#) {
             let _ = tx
-                .send(IngestMessage::RequestStart { source: "claude".into() })
+                .send(IngestMessage::RequestStart {
+                    source: "claude".into(),
+                })
                 .await;
         }
         if !trimmed.contains(r#""type":"assistant""#)
@@ -273,7 +278,10 @@ async fn poll_file(
                 || trimmed.contains(r#""type":"tool_result""#))
         {
             let _ = tx
-                .send(IngestMessage::MicroBurn { source: "claude".into(), tokens: 5 })
+                .send(IngestMessage::MicroBurn {
+                    source: "claude".into(),
+                    tokens: 5,
+                })
                 .await;
         }
         if let Some(ev) = parse_event(trimmed) {
@@ -315,7 +323,9 @@ where
         // to issue an inference request). Use as a request-start marker.
         if trimmed.contains(r#""type":"user""#) {
             let _ = tx
-                .send(IngestMessage::RequestStart { source: "claude".into() })
+                .send(IngestMessage::RequestStart {
+                    source: "claude".into(),
+                })
                 .await;
         }
         // Tool-use / tool-result markers in non-assistant lines: emit a small
@@ -325,7 +335,10 @@ where
                 || trimmed.contains(r#""type":"tool_result""#))
         {
             let _ = tx
-                .send(IngestMessage::MicroBurn { source: "claude".into(), tokens: 5 })
+                .send(IngestMessage::MicroBurn {
+                    source: "claude".into(),
+                    tokens: 5,
+                })
                 .await;
         }
         if let Some(ev) = parse_event(trimmed) {

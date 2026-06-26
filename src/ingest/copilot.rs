@@ -120,9 +120,7 @@ pub fn parse_block(block: &str, state: &mut ProcessState, ts: DateTime<Utc>) -> 
 /// chunk produced 30+ phantom starts, pushing the live rate to millions of
 /// tok/s and masking real activity).
 fn is_request_start_line(line: &str) -> bool {
-    line.as_bytes()
-        .first()
-        .map_or(false, |b| b.is_ascii_digit())
+    line.as_bytes().first().is_some_and(|b| b.is_ascii_digit())
         && line.contains("[INFO]")
         && line.contains("Start of group: Sending request to the AI model")
 }
@@ -168,7 +166,8 @@ pub async fn run(logs_root: PathBuf, tx: EventSender) -> Result<()> {
     let mut rescan = tokio::time::interval(Duration::from_secs(2));
 
     let (active_tx, mut active_rx) = tokio::sync::mpsc::channel::<PathBuf>(64);
-    let mut polling: HashMap<PathBuf, std::sync::Arc<std::sync::atomic::AtomicBool>> = HashMap::new();
+    let mut polling: HashMap<PathBuf, std::sync::Arc<std::sync::atomic::AtomicBool>> =
+        HashMap::new();
     // Every active log file is polled continuously at this cadence, so a
     // working agent is reflected within ~this latency even after a long
     // tool-execution gap (the old 30 s "hot window" prune caused multi-second
@@ -212,7 +211,17 @@ pub async fn run(logs_root: PathBuf, tx: EventSender) -> Result<()> {
 
         // Read each changed file from its saved offset to EOF.
         for path in changed {
-            if let Err(e) = poll_log(&path, &mut offsets, &mut files, &mut last_meta, &mut tails, &mut states, &tx).await {
+            if let Err(e) = poll_log(
+                &path,
+                &mut offsets,
+                &mut files,
+                &mut last_meta,
+                &mut tails,
+                &mut states,
+                &tx,
+            )
+            .await
+            {
                 tracing::debug!(?path, error = ?e, "copilot poll failed");
             }
         }
@@ -230,8 +239,8 @@ fn is_target_log(p: &Path) -> bool {
 
 async fn scan_active_logs(root: &Path) -> Vec<PathBuf> {
     let all = scan_logs(root);
-    let cutoff = std::time::SystemTime::now()
-        .checked_sub(Duration::from_secs(ACTIVE_LOG_MAX_AGE_SECS));
+    let cutoff =
+        std::time::SystemTime::now().checked_sub(Duration::from_secs(ACTIVE_LOG_MAX_AGE_SECS));
     let mut out = Vec::new();
     for p in all {
         if let Ok(meta) = tokio::fs::metadata(&p).await {
@@ -324,12 +333,16 @@ async fn poll_log(
         return Ok(());
     }
     let _ = tx
-        .send(IngestMessage::Activity { source: "copilot".into() })
+        .send(IngestMessage::Activity {
+            source: "copilot".into(),
+        })
         .await;
     for line in buf.lines() {
         if is_request_start_line(line) {
             let _ = tx
-                .send(IngestMessage::RequestStart { source: "copilot".into() })
+                .send(IngestMessage::RequestStart {
+                    source: "copilot".into(),
+                })
                 .await;
         }
     }
@@ -345,11 +358,7 @@ async fn poll_log(
 
 /// Walk text, find `[DEBUG] {`-style multi-line JSON blocks, parse them.
 /// Returns leftover (incomplete trailing block).
-pub async fn process_chunk(
-    text: &str,
-    state: &mut ProcessState,
-    tx: &EventSender,
-) -> String {
+pub async fn process_chunk(text: &str, state: &mut ProcessState, tx: &EventSender) -> String {
     let mut cursor = 0usize;
     let bytes = text.as_bytes();
     let len = bytes.len();
@@ -367,6 +376,9 @@ pub async fn process_chunk(
         let mut in_str = false;
         let mut escape = false;
         let mut end_at: Option<usize> = None;
+        // Absolute byte index is needed to slice the completed block and to
+        // record `end_at`, so a range loop reads better than `enumerate`.
+        #[allow(clippy::needless_range_loop)]
         for i in brace_at..len {
             let c = bytes[i] as char;
             if in_str {
@@ -428,11 +440,20 @@ async fn scan_stream_deltas(block: &str, tx: &EventSender) {
         }
         // Find ':' then opening quote.
         let mut j = i + needle.len();
-        while j < bytes.len() && bytes[j] != b':' { j += 1; }
-        if j >= bytes.len() { break; }
+        while j < bytes.len() && bytes[j] != b':' {
+            j += 1;
+        }
+        if j >= bytes.len() {
+            break;
+        }
         j += 1;
-        while j < bytes.len() && (bytes[j] as char).is_whitespace() { j += 1; }
-        if j >= bytes.len() || bytes[j] != b'"' { i = j; continue; }
+        while j < bytes.len() && (bytes[j] as char).is_whitespace() {
+            j += 1;
+        }
+        if j >= bytes.len() || bytes[j] != b'"' {
+            i = j;
+            continue;
+        }
         j += 1;
         let str_start = j;
         let mut escape = false;
@@ -447,7 +468,9 @@ async fn scan_stream_deltas(block: &str, tx: &EventSender) {
             }
             j += 1;
         }
-        if j >= bytes.len() { break; }
+        if j >= bytes.len() {
+            break;
+        }
         let content_len = j - str_start;
         if content_len > 0 {
             let est = ((content_len as u32) / 4).max(1);
@@ -482,7 +505,10 @@ mod tests {
         let (tx, mut rx) = mpsc::channel(8);
         let mut state = ProcessState::default();
         let leftover = process_chunk(BLOCK, &mut state, &tx).await;
-        assert!(leftover.is_empty(), "no leftover expected, got {leftover:?}");
+        assert!(
+            leftover.is_empty(),
+            "no leftover expected, got {leftover:?}"
+        );
         let msg = rx.recv().await.expect("event");
         match msg {
             IngestMessage::Event(ev) => {

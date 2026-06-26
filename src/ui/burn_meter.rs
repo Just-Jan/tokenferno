@@ -28,21 +28,22 @@ pub fn render(f: &mut Frame, area: Rect, _snap: &Snapshot, smoothed_rate: f64) {
     let filled = filled.min(bar_w);
     let color = rate_color(smoothed_rate);
 
-    let mut spans: Vec<Span> = Vec::with_capacity(4);
-    spans.push(Span::styled("[", Style::default().fg(Color::DarkGray)));
-    spans.push(Span::styled(
-        "█".repeat(filled),
-        Style::default().fg(color).add_modifier(Modifier::BOLD),
-    ));
-    spans.push(Span::styled(
-        "░".repeat(bar_w - filled),
-        Style::default().fg(Color::DarkGray),
-    ));
-    spans.push(Span::styled("] ", Style::default().fg(Color::DarkGray)));
-    spans.push(Span::styled(
-        label,
-        Style::default().fg(color).add_modifier(Modifier::BOLD),
-    ));
+    let spans: Vec<Span> = vec![
+        Span::styled("[", Style::default().fg(Color::DarkGray)),
+        Span::styled(
+            "█".repeat(filled),
+            Style::default().fg(color).add_modifier(Modifier::BOLD),
+        ),
+        Span::styled(
+            "░".repeat(bar_w - filled),
+            Style::default().fg(Color::DarkGray),
+        ),
+        Span::styled("] ", Style::default().fg(Color::DarkGray)),
+        Span::styled(
+            label,
+            Style::default().fg(color).add_modifier(Modifier::BOLD),
+        ),
+    ];
     f.render_widget(Paragraph::new(Line::from(spans)), area);
 }
 

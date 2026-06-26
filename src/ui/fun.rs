@@ -97,7 +97,9 @@ pub fn render(
     }
 
     // ---- Fire simulation (fills the whole inner area) ----
-    state.fire.resize(inner.width as usize, inner.height as usize);
+    state
+        .fire
+        .resize(inner.width as usize, inner.height as usize);
     // Drain pending burst energy into flares.
     while state.pending_flares >= 1.0 {
         let strength = (state.pending_flares / 8.0).clamp(0.15, 1.0);
@@ -113,7 +115,15 @@ pub fn render(
 
     // ---- HUD overlay ----
     render_scoreboard(f, inner, snap);
-    render_hero(f, inner, snap, displayed_total, smoothed_rate, tick, burning);
+    render_hero(
+        f,
+        inner,
+        snap,
+        displayed_total,
+        smoothed_rate,
+        tick,
+        burning,
+    );
     if debug {
         render_debug_hud(f, inner, snap);
     }
@@ -137,7 +147,12 @@ fn render_debug_hud(f: &mut Frame, area: Rect, snap: &Snapshot) {
             cell.set_fg(Color::Reset);
         }
     }
-    let rect = Rect { x: area.x, y, width: area.width, height: 1 };
+    let rect = Rect {
+        x: area.x,
+        y,
+        width: area.width,
+        height: 1,
+    };
     f.render_widget(
         Paragraph::new(Line::from(Span::styled(
             detection_debug(snap),
@@ -156,7 +171,12 @@ pub fn detection_debug(snap: &Snapshot) -> String {
     let now = Utc::now();
     let age = snap
         .last_event_at
-        .map(|t| format!("{:.1}s", (now - t).num_milliseconds().max(0) as f64 / 1000.0))
+        .map(|t| {
+            format!(
+                "{:.1}s",
+                (now - t).num_milliseconds().max(0) as f64 / 1000.0
+            )
+        })
         .unwrap_or_else(|| "—".into());
     let in_flight: u32 = snap.in_flight.values().sum();
     let meas = measured_decis(&snap.burn_per_decisec);
@@ -274,21 +294,22 @@ fn render_hero(
     if area.height >= 13 && top + 7 < area.y + area.height {
         render_odometer(f.buffer_mut(), area, top, displayed_total);
         let label_y = top + 5;
-        let label = Line::from(vec![
-            Span::styled(
-                "  tokens burned today  ",
-                Style::default()
-                    .bg(Color::Rgb(12, 6, 0))
-                    .fg(Color::Rgb(255, 200, 120)),
-            ),
-        ]);
+        let label = Line::from(vec![Span::styled(
+            "  tokens burned today  ",
+            Style::default()
+                .bg(Color::Rgb(12, 6, 0))
+                .fg(Color::Rgb(255, 200, 120)),
+        )]);
         let label_rect = Rect {
             x: area.x,
             y: label_y,
             width: area.width,
             height: 1,
         };
-        f.render_widget(Paragraph::new(label).alignment(Alignment::Center), label_rect);
+        f.render_widget(
+            Paragraph::new(label).alignment(Alignment::Center),
+            label_rect,
+        );
 
         // Live rate readout, one line below.
         let flame = if burning {
@@ -310,9 +331,7 @@ fn render_hero(
             ),
             Span::styled(
                 "tokens / second  ",
-                Style::default()
-                    .bg(Color::Rgb(12, 6, 0))
-                    .fg(Color::Gray),
+                Style::default().bg(Color::Rgb(12, 6, 0)).fg(Color::Gray),
             ),
         ]);
         let rate_rect = Rect {
@@ -340,9 +359,7 @@ fn render_hero(
             ),
             Span::styled(
                 format!("▼ context {}  ", fmt_compact(context)),
-                Style::default()
-                    .bg(Color::Rgb(12, 6, 0))
-                    .fg(Color::Gray),
+                Style::default().bg(Color::Rgb(12, 6, 0)).fg(Color::Gray),
             ),
         ]);
         let breakdown_rect = Rect {
@@ -358,7 +375,11 @@ fn render_hero(
     } else {
         // Compact: single big readout of the live rate.
         let line = Line::from(vec![Span::styled(
-            format!("  {} tok/s  ·  {} burned today  ", fmt_rate(rate_tps), fmt_int(snap.today.total)),
+            format!(
+                "  {} tok/s  ·  {} burned today  ",
+                fmt_rate(rate_tps),
+                fmt_int(snap.today.total)
+            ),
             Style::default()
                 .bg(Color::Rgb(12, 6, 0))
                 .fg(Color::Rgb(255, 240, 200))
@@ -479,7 +500,7 @@ fn sparkline(data: &[u64], width: usize) -> String {
 }
 
 fn fmt_rate(tps: f64) -> String {
-    if !(tps >= 0.5) {
+    if tps.is_nan() || tps < 0.5 {
         return "0".to_string(); // also catches -0.0 / NaN
     }
     if tps >= 1000.0 {
@@ -591,4 +612,3 @@ fn project_one(snap: &Snapshot, provider: &str, n: u32, oldest: DateTime<Utc>) -
     }
     median_tps * (n as f64) * factor
 }
-

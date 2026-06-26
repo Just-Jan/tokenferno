@@ -112,7 +112,11 @@ pub async fn run(argv: Vec<String>, tx: EventSender) -> Result<()> {
             let _ = h.write_all(&bytes);
             let _ = h.flush();
         }
-        let _ = tx.send(IngestMessage::Activity { source: source.into() }).await;
+        let _ = tx
+            .send(IngestMessage::Activity {
+                source: source.into(),
+            })
+            .await;
         let text = String::from_utf8_lossy(&bytes);
         match route {
             Route::Claude => {
@@ -125,7 +129,9 @@ pub async fn run(argv: Vec<String>, tx: EventSender) -> Result<()> {
                     }
                     if trimmed.contains(r#""type":"user""#) {
                         let _ = tx
-                            .send(IngestMessage::RequestStart { source: "claude".into() })
+                            .send(IngestMessage::RequestStart {
+                                source: "claude".into(),
+                            })
                             .await;
                     }
                     if let Some(ev) = claude::parse_event(trimmed) {
@@ -136,7 +142,9 @@ pub async fn run(argv: Vec<String>, tx: EventSender) -> Result<()> {
             Route::Copilot | Route::Unknown => {
                 for _ in text.matches("Sending request to the AI model") {
                     let _ = tx
-                        .send(IngestMessage::RequestStart { source: "copilot".into() })
+                        .send(IngestMessage::RequestStart {
+                            source: "copilot".into(),
+                        })
                         .await;
                 }
                 copilot_tail.push_str(&text);

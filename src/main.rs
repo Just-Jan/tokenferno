@@ -187,7 +187,15 @@ async fn main() -> Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let result = run_loop(&mut terminal, snap_rx, cmd_tx, &mut mode, &mut filter, args.debug).await;
+    let result = run_loop(
+        &mut terminal,
+        snap_rx,
+        cmd_tx,
+        &mut mode,
+        &mut filter,
+        args.debug,
+    )
+    .await;
 
     disable_raw_mode().ok();
     if !args.no_altscreen {
@@ -222,8 +230,7 @@ async fn run_loop<B: ratatui::backend::Backend>(
         // Keyed off measured token throughput + the smoothed display rate
         // — NOT in-flight/activity heuristics, which fire on mere process
         // liveness and would pin us at 60 fps while nothing is burning.
-        let token_active =
-            current.micro_rate_tps > 0.0 || current.instant_rate_tps > 0.0;
+        let token_active = current.micro_rate_tps > 0.0 || current.instant_rate_tps > 0.0;
         let want_ms: u64 = if token_active || displayed_rate > 0.5 {
             16
         } else {
@@ -278,7 +285,11 @@ async fn run_loop<B: ratatui::backend::Backend>(
         // Asymmetric easing: rise fast (a new burst feels snappy), fall
         // even faster so the fire visibly cools the moment token
         // traffic drops instead of lingering for a second after.
-        let alpha = if target_rate > displayed_rate { 0.45 } else { 0.72 };
+        let alpha = if target_rate > displayed_rate {
+            0.45
+        } else {
+            0.72
+        };
         displayed_rate += (target_rate - displayed_rate) * alpha;
         if (target_rate - displayed_rate).abs() < 0.05 {
             displayed_rate = target_rate;
@@ -297,8 +308,18 @@ async fn run_loop<B: ratatui::backend::Backend>(
         terminal.draw(|f| {
             let snap = &current;
             match *mode {
-                Mode::Dash => ui::dashboard::render(f, snap, *filter, displayed_total, tick_counter),
-                Mode::Fun => ui::fun::render(f, snap, tick_counter, displayed_rate, displayed_total, debug_hud, &mut fun_state),
+                Mode::Dash => {
+                    ui::dashboard::render(f, snap, *filter, displayed_total, tick_counter)
+                }
+                Mode::Fun => ui::fun::render(
+                    f,
+                    snap,
+                    tick_counter,
+                    displayed_rate,
+                    displayed_total,
+                    debug_hud,
+                    &mut fun_state,
+                ),
             }
         })?;
 
