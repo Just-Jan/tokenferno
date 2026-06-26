@@ -4,6 +4,11 @@ version = "0.1.0"
 edition = "2021"
 description = "Real-time TUI showing token burn for Claude Code and Copilot CLI."
 license = "MIT"
+repository = "https://github.com/Just-Jan/tokenferno"
+homepage = "https://github.com/Just-Jan/tokenferno"
+readme = "README.md"
+keywords = ["tui", "tokens", "claude", "copilot", "cli"]
+categories = ["command-line-utilities"]
 
 [lib]
 name = "tokenferno"

@@ -23,11 +23,20 @@ Requires [Rust](https://rustup.rs/) 1.75+.
 ```bash
 git clone https://github.com/Just-Jan/tokenferno
 cd tokenferno
-cargo build --release
-./target/release/tokenferno
+cargo install --path . --bin tokenferno
 ```
 
-> Binary releases coming soon.
+That puts `tokenferno` on your `PATH` (in `~/.cargo/bin`), so you can run it from
+anywhere. Prefer not to install? Build and run in place with
+`cargo build --release && ./target/release/tokenferno`.
+
+**Homebrew** (builds from source; no tap needed):
+
+```bash
+brew install https://raw.githubusercontent.com/Just-Jan/tokenferno/main/Formula/tokenferno.rb
+```
+
+> Prebuilt binaries are attached to each [release](https://github.com/Just-Jan/tokenferno/releases).
 
 ---
 
