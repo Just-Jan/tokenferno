@@ -5,11 +5,23 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Only auto-PR safe minor/patch bumps, grouped into one PR. Major (breaking)
+    # bumps are left for manual review so Dependabot never opens a PR that fails
+    # CI on an API break (e.g. ratatui 0.29 -> 0.30).
     groups:
-      cargo:
-        patterns: ["*"]
+      cargo-minor:
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: weekly
+    groups:
+      actions-minor:
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
