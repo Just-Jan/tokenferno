@@ -33,7 +33,9 @@ anywhere. Prefer not to install? Build and run in place with
 **Homebrew:**
 
 ```bash
-brew install just-jan/tap/tokenferno
+brew tap just-jan/tap
+brew trust just-jan/tap   # Homebrew 6+: approve the third-party tap (one-time)
+brew install tokenferno
 ```
 
 Upgrade later with `brew update && brew upgrade tokenferno`.
