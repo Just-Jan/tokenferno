@@ -30,13 +30,15 @@ That puts `tokenferno` on your `PATH` (in `~/.cargo/bin`), so you can run it fro
 anywhere. Prefer not to install? Build and run in place with
 `cargo build --release && ./target/release/tokenferno`.
 
-**Homebrew** (builds from source; no tap needed):
+**Homebrew:**
 
 ```bash
-brew install https://raw.githubusercontent.com/Just-Jan/tokenferno/main/Formula/tokenferno.rb
+brew install just-jan/tap/tokenferno
 ```
 
-> Prebuilt binaries are attached to each [release](https://github.com/Just-Jan/tokenferno/releases).
+Upgrade later with `brew update && brew upgrade tokenferno`.
+
+> Prebuilt binaries are also attached to each [release](https://github.com/Just-Jan/tokenferno/releases).
 
 ---
 
